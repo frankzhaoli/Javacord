@@ -1,75 +1,79 @@
 import net.dv8tion.jda.api.AccountType;
 import net.dv8tion.jda.api.JDABuilder;
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.entities.Activity;
 
 import java.lang.*;
 import java.io.*;
 import java.util.*;
 import javax.security.auth.login.LoginException;
 
-//main method
-public class Main extends ListenerAdapter {
-    public static void main(String[] args) throws Exception{
+public class Main
+{
+    private static final HashMap <String, String> keyMap= new HashMap<>();
+
+    public static void main(String[] args)
+    {
         Main main=new Main();
-        //get api keys from txt, stored in array
-        String[] token=main.getBotToken();
-        String discordKey=token[0];
-        String darkSkyKey=token[1];
+
+        //get api keys from txt, store in map
+        main.getBotToken();
+
         //initialize bot
-        //main.buildBot(discordKey);
-        Weather weather=new Weather("asdf", "houston");
-        weather.getWeather();
-
+        main.buildBot(keyMap.get("discord"));
     }
 
-    //method to read in bot token
-    private String[] getBotToken() throws FileNotFoundException {
-        //array to hold keys
-        String[] keys=new String[5];
-        //read keys from file
-        File file=new File("C:\\Users\\Frank\\IdeaProjects\\Javacord\\src\\main\\java\\keys.txt");
-        Scanner scan=new Scanner(file);
-
-        //read and parse until eof
-        int i=0;
-        while(scan.hasNextLine())
-        {
-            String token=scan.nextLine();
-            token=token.split(":")[1];
-            keys[i]=token;
-            i++;
-        }
-
-        return keys;
-    }
-
-    private void buildBot(String token) throws LoginException
+    //method to read in keys from external file
+    private void getBotToken()
     {
-        JDABuilder builder=new JDABuilder(AccountType.BOT);
-        builder.setToken(token);
-        builder.addEventListeners(new Main());
-        builder.build();
+        try
+        {
+            //read keys from file
+            File file=new File("C:\\Users\\Frank\\IdeaProjects\\Javacord\\src\\main\\java\\keys.txt");
+            Scanner scan=new Scanner(file);
+
+            //read and parse until eof
+            while(scan.hasNextLine())
+            {
+                String line=scan.nextLine();
+                //split at ":"
+                String[] split =line.split(":");
+                //to clarify: key/value pairs in a map
+                //current keys: discord, openweather, apod, redditClientID, redditClientSecret
+                String key=split[0];
+                String value=split[1];
+                keyMap.put(key, value);
+            }
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+            System.exit(-1);
+        }
     }
 
-    @Override
-    public void onMessageReceived(MessageReceivedEvent event)
+    //set token build bot
+    private void buildBot(String token)
     {
-        //ignore all bots
-        if(event.getAuthor().isBot() && event.getAuthor().getName() != "noona 2019")
+        try
         {
-            return;
+            JDABuilder builder = new JDABuilder(AccountType.BOT).setToken(token);
+            builder.addEventListeners(new BotListener(keyMap));
+            builder.setActivity(Activity.listening("11:11"));
+            builder.build();
         }
-
-        System.out.println("We received a msg from "+event.getAuthor().getName()+
-                ": "+event.getMessage().getContentDisplay());
-
-        //get raw input
-        if(event.getMessage().getContentRaw().equals("!ping"))
+        catch (LoginException e)
         {
-            //always call queue
-            //otherwise msg will never be sent
-            event.getChannel().sendMessage("Pong!").queue();
+            e.printStackTrace();
+            System.exit(-1);
         }
     }
 }
+
+        //snippet for debugging
+        /*
+        ConsoleHandler handler=new ConsoleHandler();
+        handler.setLevel(Level.ALL);
+        Logger log= LogManager.getLogManager().getLogger("");
+        log.addHandler(handler);
+        log.setLevel(Level.ALL);
+         */

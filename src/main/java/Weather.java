@@ -1,36 +1,61 @@
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.net.http.HttpClient;
 import java.util.*;
-
 
 //class that returns weather information
 public class Weather {
-    private String apiKey;
+    private final String apiKey;
     private String city;
+    private String summary;
 
+    //initialize weather object with city
     public Weather(String apiKey, String city)
     {
         this.apiKey=apiKey;
         this.city=city;
     }
 
-    public void getWeather() throws IOException {
-        String requestURL="https://api.darksky.net/forecast/e55bcbfa7652e292fadfe151611c1e82/37.8267,-122.4233";
-        URL darksky=new URL(requestURL);
+    public void getWeather() throws IOException
+    {
+        String requestURL="https://api.openweathermap.org/data/2.5/weather?q="+city+"&units=imperial&appid="+apiKey;
+        String openWeatherJson="";
+        URL openWeatherURL=new URL(requestURL);
 
-        URLConnection connection=darksky.openConnection();
+        URLConnection connection=openWeatherURL.openConnection();
         BufferedReader in=new BufferedReader(new InputStreamReader(connection.getInputStream()));
 
         String inputLine;
         while((inputLine=in.readLine()) != null)
-            System.out.println(inputLine);
+        {
+            openWeatherJson=inputLine;
+        }
         in.close();
 
+        parseJson(openWeatherJson);
+    }
+
+    public void parseJson(String jsonString)
+    {
+        JsonObject obj=new Gson().fromJson(jsonString, JsonObject.class);
+        JsonArray weatherArray=obj.get("weather").getAsJsonArray();
+        JsonObject weatherObj=weatherArray.get(0).getAsJsonObject();
+
+        String description=weatherObj.get("description").getAsString();
+
+        JsonObject mainTempObj=obj.getAsJsonObject("main");
+        String temp=mainTempObj.get("temp").getAsString();
+        String feelsLikeTemp=mainTempObj.get("feels_like").getAsString();
+
+        summary="The weather in "+city+" is "+description+". The temperature is "
+                +temp+", and it feels like "+feelsLikeTemp+".";
     }
 
     public String getCity()
@@ -46,8 +71,7 @@ public class Weather {
     @Override
     public String toString()
     {
-        return null;
+        return summary;
     }
-
 }
 
