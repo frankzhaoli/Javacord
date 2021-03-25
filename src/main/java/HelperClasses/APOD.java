@@ -1,3 +1,5 @@
+package HelperClasses;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -17,6 +19,7 @@ public class APOD
     private String date;
     private String explanation;
     private String imageUrl;
+
 
     public APOD(String apodKey)
     {

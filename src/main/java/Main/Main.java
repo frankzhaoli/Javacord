@@ -1,4 +1,8 @@
-import net.dv8tion.jda.api.AccountType;
+package Main;
+
+import Listener.BotListener;
+import Listener.WeatherListenerAdapter;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
 
@@ -13,6 +17,7 @@ public class Main
 
     public static void main(String[] args)
     {
+        System.out.println("Starting Javacord: ");
         Main main=new Main();
 
         //get api keys from txt, store in map
@@ -20,6 +25,7 @@ public class Main
 
         //initialize bot
         main.buildBot(keyMap.get("discord"));
+        System.out.println("Starting complete. ");
     }
 
     //method to read in keys from external file
@@ -28,7 +34,8 @@ public class Main
         try
         {
             //read keys from file
-            File file=new File("C:\\Users\\Frank\\IdeaProjects\\Javacord\\src\\main\\java\\keys.txt");
+            File file=new File("src/main/resources/keys.txt");
+            //File file=new File("keys.txt");
             Scanner scan=new Scanner(file);
 
             //read and parse until eof
@@ -43,6 +50,9 @@ public class Main
                 String value=split[1];
                 keyMap.put(key, value);
             }
+
+            //empty keyMap
+            //keyMap.clear();
         }
         catch (IOException e)
         {
@@ -56,10 +66,11 @@ public class Main
     {
         try
         {
-            JDABuilder builder = new JDABuilder(AccountType.BOT).setToken(token);
-            builder.addEventListeners(new BotListener(keyMap));
-            builder.setActivity(Activity.listening("11:11"));
-            builder.build();
+            JDA builder=JDABuilder.createDefault(token).setActivity(Activity.listening("11:11")).build();
+            builder.addEventListener(new BotListener(keyMap.get("redditClientId"), keyMap.get("redditClientSecret")));
+            builder.addEventListener(new WeatherListenerAdapter(keyMap.get("openweather")));
+            //builder.addEventListener(new APODListenerAdapter(keyMap.get("apod")));
+            //builder.addEventListener(new KPODListenerAdapter(keyMap.get("redditClientId"), keyMap.get("redditClientSecret"));
         }
         catch (LoginException e)
         {
